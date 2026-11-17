@@ -60,6 +60,13 @@
             max-height: 190px;
             object-fit: cover;
         }
+        .pp-nofoto {
+            padding: 8px 14px;
+            background: #fff3cd;
+            color: #664d03;
+            font-size: 12px;
+            word-break: break-all;
+        }
         .pp-sec { border-bottom: 1px solid #e6e6e6; padding: 2px 0; }
         .pp-sec:last-child { border-bottom: 0; }
         .pp-sec > summary {
@@ -217,6 +224,28 @@
                    '<div class="pp-scroll">' + body + '</div></div>';
         }
 
+        // Jika foto gagal dimuat: coba variasi huruf besar/kecil pada ekstensi
+        // (.jpg / .JPG), kalau tetap gagal tampilkan nama file yang dicari.
+        function fotoGagal(img) {
+            var orig = img.getAttribute('data-orig') || img.getAttribute('src');
+            img.setAttribute('data-orig', orig);
+            var tries = Number(img.getAttribute('data-try') || 0);
+            var alt = [];
+            var m = orig.match(/^(.*)\.([^.\/]+)$/);
+            if (m) {
+                [m[2].toLowerCase(), m[2].toUpperCase()].forEach(function (e) {
+                    if (e !== m[2]) alt.push(m[1] + '.' + e);
+                });
+            }
+            if (tries < alt.length) {
+                img.setAttribute('data-try', tries + 1);
+                img.src = alt[tries];
+                return;
+            }
+            img.parentNode.innerHTML = '<div class="pp-nofoto">Foto tidak ditemukan:<br>' +
+                esc(decodeURIComponent(orig)) + '</div>';
+        }
+
         function maskNik(v) {
             var s = String(v);
             return s.length > 6 ? s.slice(0, 4) + '*'.repeat(s.length - 6) + s.slice(-2) : s;
@@ -274,10 +303,10 @@
 
             var photoHtml = '';
             if (has(p['fotorumah'])) {
-                var src = 'images/' + String(p['fotorumah']).replace(/[\\/:]/g, '_').trim();
+                var src = 'images/' + encodeURIComponent(String(p['fotorumah']).replace(/[\\/:]/g, '_').trim());
                 photoHtml = '<a class="pp-photo" href="' + esc(src) + '" target="_blank" rel="noopener">' +
                             '<img src="' + esc(src) + '" alt="Foto rumah" loading="lazy" ' +
-                            'onerror="this.parentNode.style.display=\'none\'"></a>';
+                            'onerror="fotoGagal(this)"></a>';
             }
 
             var body =
