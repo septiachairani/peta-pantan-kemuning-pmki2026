@@ -147,15 +147,16 @@
         <script src="data/rumah_2.js"></script>
         <script src="data/kebun_3.js"></script>
         <script src="data/Hutan_4.js"></script>
-        <script src="data/Peta_Rumah_KKrumah_kk_5.js"></script>
-        <script src="data/rumah1_6.js"></script>
-        <script src="data/jalan_7.js"></script>
-        <script src="data/longsorr_8.js"></script>
-        <script src="data/Lines_9.js"></script>
+        <script src="data/titik_longsorpoints_from_table_6.js"></script>
+        <script src="data/Peta_Rumah_KKrumah_kk_7.js"></script>
+        <script src="data/rumah1_8.js"></script>
+        <script src="data/jalan_9.js"></script>
+        <script src="data/longsorr_10.js"></script>
+        <script src="data/Lines_11.js"></script>
         <script>
         var map = L.map('map', {
             zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[4.765656938048143,96.68981148609718],[4.797560145199189,96.7422733542838]]);
+        }).fitBounds([[4.763984998150113,96.69204289683152],[4.793174892896056,96.75024541975613]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
@@ -246,6 +247,15 @@
                 esc(decodeURIComponent(orig)) + '</div>';
         }
 
+        // blok foto di bagian atas popup (nama file dari kolom atribut, folder images/)
+        function fotoHtml(nama, alt) {
+            if (!has(nama)) return '';
+            var src = 'images/' + encodeURIComponent(String(nama).replace(/[\\/:]/g, '_').trim());
+            return '<a class="pp-photo" href="' + esc(src) + '" target="_blank" rel="noopener">' +
+                   '<img src="' + esc(src) + '" alt="' + esc(alt) + '" loading="lazy" ' +
+                   'onerror="fotoGagal(this)"></a>';
+        }
+
         function maskNik(v) {
             var s = String(v);
             return s.length > 6 ? s.slice(0, 4) + '*'.repeat(s.length - 6) + s.slice(-2) : s;
@@ -263,9 +273,9 @@
         var pop_rumah_2 = simplePopup('Rumah');
         var pop_kebun_3 = simplePopup('Kebun');
         var pop_Hutan_4 = simplePopup('Hutan');
-        var pop_rumah1_6 = simplePopup('Rumah');
-        var pop_jalan_7 = simplePopup('Jalan');
-        var pop_longsorr_8 = simplePopup('Area Longsor');
+        var pop_rumah1_8 = simplePopup('Rumah');
+        var pop_jalan_9 = simplePopup('Jalan');
+        var pop_longsorr_10 = simplePopup('Area Longsor');
 
         // =====================================================
         //  POPUP: PENUTUPAN LAHAN (data administrasi)
@@ -291,9 +301,36 @@
         }
 
         // =====================================================
+        //  POPUP: TITIK LONGSOR
+        // =====================================================
+        function pop_titik_longsorpoints_from_table_6(feature, layer) {
+            var p = feature.properties;
+            var koordinat = (has(p['Latitude']) && has(p['Longitude']))
+                ? p['Latitude'] + ', ' + p['Longitude'] : null;
+
+            var body =
+                section('Data titik',
+                    row('Kode', p['Kode_KML']) +
+                    row('No. objek', p['No_Objek']) +
+                    row('Tanggal ambil', p['Tanggal_Ambil']) +
+                    row('Koordinat', koordinat), true);
+
+            if (koordinat) {
+                body += '<div class="pp-foot"><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=' +
+                        encodeURIComponent(p['Latitude'] + ',' + p['Longitude']) +
+                        '">Buka di Google Maps</a></div>';
+            }
+
+            var title = has(p['Kode_KML']) ? 'Titik Longsor ' + p['Kode_KML'] : 'Titik Longsor';
+            var sub = has(p['No_Objek']) ? 'Objek No. ' + p['No_Objek'] : '';
+
+            layer.bindPopup(card(title, sub, body, fotoHtml(p['foto_longsor'], 'Foto longsor')), POPUP_OPTIONS);
+        }
+
+        // =====================================================
         //  POPUP: RUMAH & KEPALA KELUARGA
         // =====================================================
-        function pop_Peta_Rumah_KKrumah_kk_5(feature, layer) {
+        function pop_Peta_Rumah_KKrumah_kk_7(feature, layer) {
             var p = feature.properties;
 
             var nik = has(p['NIK_KK']) ? (SEMBUNYIKAN_NIK ? maskNik(p['NIK_KK']) : p['NIK_KK']) : null;
@@ -301,13 +338,7 @@
             var koordinat = (has(p['Latitude']) && has(p['Longitude']))
                 ? p['Latitude'] + ', ' + p['Longitude'] : null;
 
-            var photoHtml = '';
-            if (has(p['fotorumah'])) {
-                var src = 'images/' + encodeURIComponent(String(p['fotorumah']).replace(/[\\/:]/g, '_').trim());
-                photoHtml = '<a class="pp-photo" href="' + esc(src) + '" target="_blank" rel="noopener">' +
-                            '<img src="' + esc(src) + '" alt="Foto rumah" loading="lazy" ' +
-                            'onerror="fotoGagal(this)"></a>';
-            }
+            var photoHtml = fotoHtml(p['fotorumah'], 'Foto rumah');
 
             var body =
                 section('Kepala keluarga',
@@ -406,7 +437,7 @@
             ['WIRASWAST_', 'Wiraswasta'], ['LAINNYA_12', 'Lainnya']
         ];
 
-        function pop_Lines_9(feature, layer) {
+        function pop_Lines_11(feature, layer) {
             var p = feature.properties;
             var namaDesa = has(p['DESA_KELUR']) ? p['DESA_KELUR'] : p['DESA'];
 
@@ -576,9 +607,9 @@
         bounds_group.addLayer(layer_Hutan_4);
         map.addLayer(layer_Hutan_4);
 
-        function style_Peta_Rumah_KKrumah_kk_5_0() {
+        function style_Peta_Rumah_KKrumah_kk_7_0() {
             return {
-                pane: 'pane_Peta_Rumah_KKrumah_kk_5',
+                pane: 'pane_Peta_Rumah_KKrumah_kk_7',
                 radius: 8.0,
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
@@ -592,30 +623,30 @@
                 interactive: true,
             }
         }
-        map.createPane('pane_Peta_Rumah_KKrumah_kk_5');
-        map.getPane('pane_Peta_Rumah_KKrumah_kk_5').style.zIndex = 405;
-        map.getPane('pane_Peta_Rumah_KKrumah_kk_5').style['mix-blend-mode'] = 'normal';
-        var layer_Peta_Rumah_KKrumah_kk_5 = new L.geoJson(json_Peta_Rumah_KKrumah_kk_5, {
+        map.createPane('pane_Peta_Rumah_KKrumah_kk_7');
+        map.getPane('pane_Peta_Rumah_KKrumah_kk_7').style.zIndex = 405;
+        map.getPane('pane_Peta_Rumah_KKrumah_kk_7').style['mix-blend-mode'] = 'normal';
+        var layer_Peta_Rumah_KKrumah_kk_7 = new L.geoJson(json_Peta_Rumah_KKrumah_kk_7, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_Peta_Rumah_KKrumah_kk_5',
-            layerName: 'layer_Peta_Rumah_KKrumah_kk_5',
-            pane: 'pane_Peta_Rumah_KKrumah_kk_5',
-            onEachFeature: pop_Peta_Rumah_KKrumah_kk_5,
+            dataVar: 'json_Peta_Rumah_KKrumah_kk_7',
+            layerName: 'layer_Peta_Rumah_KKrumah_kk_7',
+            pane: 'pane_Peta_Rumah_KKrumah_kk_7',
+            onEachFeature: pop_Peta_Rumah_KKrumah_kk_7,
             pointToLayer: function (feature, latlng) {
                 var context = {
                     feature: feature,
                     variables: {}
                 };
-                return L.circleMarker(latlng, style_Peta_Rumah_KKrumah_kk_5_0(feature));
+                return L.circleMarker(latlng, style_Peta_Rumah_KKrumah_kk_7_0(feature));
             },
         });
-        bounds_group.addLayer(layer_Peta_Rumah_KKrumah_kk_5);
-        map.addLayer(layer_Peta_Rumah_KKrumah_kk_5);
+        bounds_group.addLayer(layer_Peta_Rumah_KKrumah_kk_7);
+        map.addLayer(layer_Peta_Rumah_KKrumah_kk_7);
 
-        function style_rumah1_6_0() {
+        function style_rumah1_8_0() {
             return {
-                pane: 'pane_rumah1_6',
+                pane: 'pane_rumah1_8',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
                 dashArray: '',
@@ -628,24 +659,24 @@
                 interactive: true,
             }
         }
-        map.createPane('pane_rumah1_6');
-        map.getPane('pane_rumah1_6').style.zIndex = 406;
-        map.getPane('pane_rumah1_6').style['mix-blend-mode'] = 'normal';
-        var layer_rumah1_6 = new L.geoJson(json_rumah1_6, {
+        map.createPane('pane_rumah1_8');
+        map.getPane('pane_rumah1_8').style.zIndex = 406;
+        map.getPane('pane_rumah1_8').style['mix-blend-mode'] = 'normal';
+        var layer_rumah1_8 = new L.geoJson(json_rumah1_8, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_rumah1_6',
-            layerName: 'layer_rumah1_6',
-            pane: 'pane_rumah1_6',
-            onEachFeature: pop_rumah1_6,
-            style: style_rumah1_6_0,
+            dataVar: 'json_rumah1_8',
+            layerName: 'layer_rumah1_8',
+            pane: 'pane_rumah1_8',
+            onEachFeature: pop_rumah1_8,
+            style: style_rumah1_8_0,
         });
-        bounds_group.addLayer(layer_rumah1_6);
-        map.addLayer(layer_rumah1_6);
+        bounds_group.addLayer(layer_rumah1_8);
+        map.addLayer(layer_rumah1_8);
 
-        function style_jalan_7_0() {
+        function style_jalan_9_0() {
             return {
-                pane: 'pane_jalan_7',
+                pane: 'pane_jalan_9',
                 opacity: 1,
                 color: 'rgba(102,102,102,1.0)',
                 dashArray: '',
@@ -656,24 +687,24 @@
                 interactive: true,
             }
         }
-        map.createPane('pane_jalan_7');
-        map.getPane('pane_jalan_7').style.zIndex = 407;
-        map.getPane('pane_jalan_7').style['mix-blend-mode'] = 'normal';
-        var layer_jalan_7 = new L.geoJson(json_jalan_7, {
+        map.createPane('pane_jalan_9');
+        map.getPane('pane_jalan_9').style.zIndex = 407;
+        map.getPane('pane_jalan_9').style['mix-blend-mode'] = 'normal';
+        var layer_jalan_9 = new L.geoJson(json_jalan_9, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_jalan_7',
-            layerName: 'layer_jalan_7',
-            pane: 'pane_jalan_7',
-            onEachFeature: pop_jalan_7,
-            style: style_jalan_7_0,
+            dataVar: 'json_jalan_9',
+            layerName: 'layer_jalan_9',
+            pane: 'pane_jalan_9',
+            onEachFeature: pop_jalan_9,
+            style: style_jalan_9_0,
         });
-        bounds_group.addLayer(layer_jalan_7);
-        map.addLayer(layer_jalan_7);
+        bounds_group.addLayer(layer_jalan_9);
+        map.addLayer(layer_jalan_9);
 
-        function style_longsorr_8_0() {
+        function style_longsorr_10_0() {
             return {
-                pane: 'pane_longsorr_8',
+                pane: 'pane_longsorr_10',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
                 dashArray: '',
@@ -686,24 +717,24 @@
                 interactive: true,
             }
         }
-        map.createPane('pane_longsorr_8');
-        map.getPane('pane_longsorr_8').style.zIndex = 408;
-        map.getPane('pane_longsorr_8').style['mix-blend-mode'] = 'normal';
-        var layer_longsorr_8 = new L.geoJson(json_longsorr_8, {
+        map.createPane('pane_longsorr_10');
+        map.getPane('pane_longsorr_10').style.zIndex = 408;
+        map.getPane('pane_longsorr_10').style['mix-blend-mode'] = 'normal';
+        var layer_longsorr_10 = new L.geoJson(json_longsorr_10, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_longsorr_8',
-            layerName: 'layer_longsorr_8',
-            pane: 'pane_longsorr_8',
-            onEachFeature: pop_longsorr_8,
-            style: style_longsorr_8_0,
+            dataVar: 'json_longsorr_10',
+            layerName: 'layer_longsorr_10',
+            pane: 'pane_longsorr_10',
+            onEachFeature: pop_longsorr_10,
+            style: style_longsorr_10_0,
         });
-        bounds_group.addLayer(layer_longsorr_8);
-        map.addLayer(layer_longsorr_8);
+        bounds_group.addLayer(layer_longsorr_10);
+        map.addLayer(layer_longsorr_10);
 
-        function style_Lines_9_0() {
+        function style_Lines_11_0() {
             return {
-                pane: 'pane_Lines_9',
+                pane: 'pane_Lines_11',
                 opacity: 1,
                 color: 'rgba(0,0,0,1.0)',
                 dashArray: '',
@@ -714,25 +745,65 @@
                 interactive: true,
             }
         }
-        map.createPane('pane_Lines_9');
-        map.getPane('pane_Lines_9').style.zIndex = 409;
-        map.getPane('pane_Lines_9').style['mix-blend-mode'] = 'normal';
-        var layer_Lines_9 = new L.geoJson(json_Lines_9, {
+        map.createPane('pane_Lines_11');
+        map.getPane('pane_Lines_11').style.zIndex = 409;
+        map.getPane('pane_Lines_11').style['mix-blend-mode'] = 'normal';
+        var layer_Lines_11 = new L.geoJson(json_Lines_11, {
             attribution: '',
             interactive: true,
-            dataVar: 'json_Lines_9',
-            layerName: 'layer_Lines_9',
-            pane: 'pane_Lines_9',
-            onEachFeature: pop_Lines_9,
-            style: style_Lines_9_0,
+            dataVar: 'json_Lines_11',
+            layerName: 'layer_Lines_11',
+            pane: 'pane_Lines_11',
+            onEachFeature: pop_Lines_11,
+            style: style_Lines_11_0,
         });
-        bounds_group.addLayer(layer_Lines_9);
-        map.addLayer(layer_Lines_9);
+        bounds_group.addLayer(layer_Lines_11);
+        map.addLayer(layer_Lines_11);
+
+        // Titik longsor dibuat paling akhir dan di lapisan paling atas
+        // supaya tidak tertutup polygon (area longsor, rumah, batas desa)
+        function style_titik_longsorpoints_from_table_6_0() {
+            return {
+                pane: 'pane_titik_longsorpoints_from_table_6',
+                radius: 7.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.5,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,158,23,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_titik_longsorpoints_from_table_6');
+        map.getPane('pane_titik_longsorpoints_from_table_6').style.zIndex = 412;
+        map.getPane('pane_titik_longsorpoints_from_table_6').style['mix-blend-mode'] = 'normal';
+        var layer_titik_longsorpoints_from_table_6 = new L.geoJson(json_titik_longsorpoints_from_table_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_titik_longsorpoints_from_table_6',
+            layerName: 'layer_titik_longsorpoints_from_table_6',
+            pane: 'pane_titik_longsorpoints_from_table_6',
+            onEachFeature: pop_titik_longsorpoints_from_table_6,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_titik_longsorpoints_from_table_6_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_titik_longsorpoints_from_table_6);
+        map.addLayer(layer_titik_longsorpoints_from_table_6);
 
         // =====================================================
         //  LEGENDA (ubah nama/warna di sini)
         // =====================================================
         var ITEM_LEGENDA = [
+            { label: 'Titik longsor',     warna: 'rgb(255,158,23)', tipe: 'titik' },
             { label: 'Titik rumah / KK',  warna: 'rgb(231,113,72)', tipe: 'titik' },
             { label: 'Rumah / bangunan',  warna: 'rgb(255,40,0)' },
             { label: 'Kebun',             warna: 'rgb(168,216,120)' },
